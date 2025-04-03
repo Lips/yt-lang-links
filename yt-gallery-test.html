@@ -9,8 +9,8 @@
         let subtitles = [];
         let player;
 
+        // Initialize YouTube player
         function onYouTubePlayerAPIReady() {
-            // Create the YouTube player
             player = new YT.Player('player', {
                 height: '315',
                 width: '560',
@@ -21,27 +21,36 @@
                 }
             });
 
-            // Fetch and parse SRT
+            // Fetch and parse the SRT subtitles
             fetchSRT('UkZxPIZ1ngY-en.srt');
         }
 
+        // Play the video when ready
         function onPlayerReady(event) {
+            console.log("Player ready.");
             event.target.playVideo();
         }
 
+        // Handle player state changes (e.g., playing, paused)
         function onPlayerStateChange(event) {
             if (event.data === YT.PlayerState.PLAYING) {
+                console.log("Video is playing.");
                 syncSubtitles(event.target);
             }
         }
 
+        // Fetch SRT file (subtitle file)
         function fetchSRT(srtFile) {
+            console.log(`Fetching SRT file: ${srtFile}`);
             fetch(srtFile)
                 .then(response => response.text())
-                .then(data => parseSRT(data));
+                .then(data => parseSRT(data))
+                .catch(error => console.error("Error fetching SRT:", error));
         }
 
+        // Parse SRT data into subtitle timings and text
         function parseSRT(data) {
+            console.log("Parsing SRT...");
             const lines = data.split('\n\n');
             lines.forEach(line => {
                 const parts = line.split('\n');
@@ -51,10 +60,12 @@
                     const end = parseTime(time[1]);
                     const text = parts.slice(2).join(' ');
                     subtitles.push({ start, end, text });
+                    console.log(`Subtitle parsed: ${text} from ${start}s to ${end}s`);
                 }
             });
         }
 
+        // Convert time from SRT format to seconds
         function parseTime(timeString) {
             const parts = timeString.split(':');
             const secondsParts = parts[2].split(',');
@@ -66,11 +77,20 @@
             );
         }
 
+        // Sync subtitles with video
         function syncSubtitles(player) {
             const currentTime = player.getCurrentTime();
+            console.log(`Current time: ${currentTime}s`);
+
             const subtitle = subtitles.find(s => currentTime >= s.start && currentTime <= s.end);
             const subtitleElement = document.getElementById('subtitles');
-            subtitleElement.innerText = subtitle ? subtitle.text : "";
+            
+            if (subtitle) {
+                console.log(`Displaying subtitle: ${subtitle.text}`);
+                subtitleElement.innerText = subtitle.text;
+            } else {
+                subtitleElement.innerText = "";  // Clear subtitle if none found
+            }
         }
 
         // Set an interval to keep syncing subtitles
