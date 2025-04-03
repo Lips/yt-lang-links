@@ -36,7 +36,7 @@
                 return;
             }
             let videoId = videoIdMatch[1];
-            let modifiedUrl = `https://www.youtube.com/watch?v=${videoId}&cc_lang_pref=${lang}&cc_load_policy=1`;
+            let modifiedUrl = `https://www.youtube.com/watch?v=${videoId}&hl=${lang}&cc_lang_pref=${lang}&cc_load_policy=1`;
             
             document.getElementById("output").innerHTML = `<a href="${modifiedUrl}" target="_blank">Open Video with ${lang.toUpperCase()} Subtitles</a>`;
         }
