@@ -8,34 +8,34 @@
     <script>
         let subtitles = [];
         let player;
+        let videoId = 'UkZxPIZ1ngY';  // Video ID
+        let srtFile = `${videoId}-en.srt`;  // SRT file name
 
         // Initialize YouTube player
         function onYouTubePlayerAPIReady() {
             player = new YT.Player('player', {
                 height: '315',
                 width: '560',
-                videoId: 'UkZxPIZ1ngY',
+                videoId: videoId,
                 events: {
                     'onReady': onPlayerReady,
                     'onStateChange': onPlayerStateChange
                 }
             });
-
-            // Fetch and parse the SRT subtitles
-            fetchSRT('UkZxPIZ1ngY-en.srt');
         }
 
         // Play the video when ready
         function onPlayerReady(event) {
             console.log("Player ready.");
-            event.target.playVideo();
+            event.target.playVideo();  // Start playing the video when ready
+            fetchSRT(srtFile);  // Fetch the subtitles when the player is ready
         }
 
         // Handle player state changes (e.g., playing, paused)
         function onPlayerStateChange(event) {
             if (event.data === YT.PlayerState.PLAYING) {
                 console.log("Video is playing.");
-                syncSubtitles(event.target);
+                startSubtitleSync();  // Start syncing subtitles once the video is playing
             }
         }
 
@@ -78,7 +78,7 @@
         }
 
         // Sync subtitles with video
-        function syncSubtitles(player) {
+        function syncSubtitles() {
             const currentTime = player.getCurrentTime();
             console.log(`Current time: ${currentTime}s`);
 
@@ -93,12 +93,14 @@
             }
         }
 
-        // Set an interval to keep syncing subtitles
-        setInterval(() => {
-            if (player && player.getPlayerState() === YT.PlayerState.PLAYING) {
-                syncSubtitles(player);
-            }
-        }, 500);
+        // Start subtitle sync after video starts playing
+        function startSubtitleSync() {
+            setInterval(() => {
+                if (player && player.getPlayerState() === YT.PlayerState.PLAYING) {
+                    syncSubtitles();
+                }
+            }, 500);  // Sync every 500ms
+        }
     </script>
 </head>
 <body onload="onYouTubePlayerAPIReady()">
