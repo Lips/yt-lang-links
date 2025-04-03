@@ -8,8 +8,8 @@
     <script>
         let subtitles = [];
         let player;
-        let videoId = 'UkZxPIZ1ngY';  // Video ID
-        let srtFile = `${videoId}-en.srt`;  // SRT file name
+        let videoId = 'UkZxPIZ1ngY';  // Hardcoded Video ID
+        let srtFile = 'UkZxPIZ1ngY-en.srt';  // Hardcoded SRT file name
 
         // Initialize YouTube player
         function onYouTubePlayerAPIReady() {
@@ -24,7 +24,7 @@
             });
         }
 
-        // Play the video when ready
+        // When the player is ready, play the video and fetch subtitles
         function onPlayerReady(event) {
             console.log("Player ready.");
             event.target.playVideo();  // Start playing the video when ready
@@ -108,7 +108,7 @@
         }
     </script>
 </head>
-<body onload="onYouTubePlayerAPIReady()">
+<body>
     <h2>YouTube Subtitle Sync</h2>
     <div id="player"></div>
     <p id="subtitles" style="font-size: 18px; font-weight: bold; margin-top: 10px;"></p>
