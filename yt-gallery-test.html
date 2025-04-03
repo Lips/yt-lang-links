@@ -3,61 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Subtitle Gallery</title>
+    <title>YouTube Subtitle Sync</title>
     <script src="https://www.youtube.com/iframe_api"></script>
     <script>
-        let subtitles = {};
-        let players = [];
-        let videoData = [
-            { id: "UkZxPIZ1ngY", srt: "video1.srt" },
-            { id: "dQw4w9WgXcQ", srt: "video2.srt" },
-            { id: "3JZ_D3ELwOQ", srt: "video3.srt" },
-            { id: "2Vv-BfVoq4g", srt: "video4.srt" },
-            { id: "e-ORhEE9VVg", srt: "video5.srt" },
-            { id: "L_jWHffIx5E", srt: "video6.srt" }
-        ];
+        let subtitles = [];
+        let player;
 
-        // This function is called by the YouTube API once the player is ready
+        function onYouTubePlayerAPIReady() {
+            // Create the YouTube player
+            player = new YT.Player('player', {
+                height: '315',
+                width: '560',
+                videoId: 'UkZxPIZ1ngY',
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+
+            // Fetch and parse SRT
+            fetchSRT('UkZxPIZ1ngY-en.srt');
+        }
+
         function onPlayerReady(event) {
             event.target.playVideo();
         }
 
-        // This function is called by the YouTube API once the player is created
-        function onYouTubePlayerAPIReady() {
-            videoData.forEach((video, index) => {
-                const container = document.createElement("div");
-                container.innerHTML = `
-                    <div>
-                        <div id="player-${index}"></div>
-                        <p id="subtitles-${index}" style="font-size: 18px; font-weight: bold; margin-top: 10px;"></p>
-                    </div>
-                `;
-                document.getElementById("gallery").appendChild(container);
-
-                // Create the YouTube player
-                players[index] = new YT.Player(`player-${index}`, {
-                    height: '315',
-                    width: '560',
-                    videoId: video.id,
-                    events: {
-                        'onReady': onPlayerReady,
-                        'onStateChange': onPlayerStateChange
-                    }
-                });
-
-                // Fetch and parse SRT
-                fetchSRT(video.srt, index);
-            });
+        function onPlayerStateChange(event) {
+            if (event.data === YT.PlayerState.PLAYING) {
+                syncSubtitles(event.target);
+            }
         }
 
-        function fetchSRT(srtFile, index) {
+        function fetchSRT(srtFile) {
             fetch(srtFile)
                 .then(response => response.text())
-                .then(data => parseSRT(data, index));
+                .then(data => parseSRT(data));
         }
 
-        function parseSRT(data, index) {
-            subtitles[index] = [];
+        function parseSRT(data) {
             const lines = data.split('\n\n');
             lines.forEach(line => {
                 const parts = line.split('\n');
@@ -66,7 +50,7 @@
                     const start = parseTime(time[0]);
                     const end = parseTime(time[1]);
                     const text = parts.slice(2).join(' ');
-                    subtitles[index].push({ start, end, text });
+                    subtitles.push({ start, end, text });
                 }
             });
         }
@@ -82,33 +66,24 @@
             );
         }
 
-        function onPlayerStateChange(event) {
-            if (event.data === YT.PlayerState.PLAYING) {
-                syncSubtitles(event.target);
-            }
-        }
-
         function syncSubtitles(player) {
-            const index = players.indexOf(player);
-            if (index === -1) return;
-
             const currentTime = player.getCurrentTime();
-            const subtitle = subtitles[index].find(s => currentTime >= s.start && currentTime <= s.end);
-            document.getElementById(`subtitles-${index}`).innerText = subtitle ? subtitle.text : "";
+            const subtitle = subtitles.find(s => currentTime >= s.start && currentTime <= s.end);
+            const subtitleElement = document.getElementById('subtitles');
+            subtitleElement.innerText = subtitle ? subtitle.text : "";
         }
 
         // Set an interval to keep syncing subtitles
         setInterval(() => {
-            players.forEach(player => {
-                if (player && player.getPlayerState() === YT.PlayerState.PLAYING) {
-                    syncSubtitles(player);
-                }
-            });
+            if (player && player.getPlayerState() === YT.PlayerState.PLAYING) {
+                syncSubtitles(player);
+            }
         }, 500);
     </script>
 </head>
 <body onload="onYouTubePlayerAPIReady()">
-    <h2>YouTube Subtitle Gallery</h2>
-    <div id="gallery"></div>
+    <h2>YouTube Subtitle Sync</h2>
+    <div id="player"></div>
+    <p id="subtitles" style="font-size: 18px; font-weight: bold; margin-top: 10px;"></p>
 </body>
 </html>
