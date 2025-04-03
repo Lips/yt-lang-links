@@ -6,7 +6,6 @@
     <title>YouTube Subtitle Gallery</title>
     <script>
         let subtitles = {};
-        let players = {};
         let videoData = [
             { id: "UkZxPIZ1ngY", srt: "video1.srt" },
             { id: "dQw4w9WgXcQ", srt: "video2.srt" },
@@ -19,7 +18,7 @@
         function loadGallery() {
             const gallery = document.getElementById("gallery");
             gallery.innerHTML = "";
-            
+
             videoData.forEach((video, index) => {
                 const container = document.createElement("div");
                 container.innerHTML = `
@@ -29,7 +28,7 @@
                     </div>
                 `;
                 gallery.appendChild(container);
-                
+
                 fetchSRT(video.srt, index);
             });
         }
@@ -70,6 +69,7 @@
             videoData.forEach((_, index) => {
                 const player = document.getElementById(`ytPlayer${index}`);
                 if (!player || !subtitles[index] || !player.contentWindow) return;
+
                 player.contentWindow.postMessage('{"event":"listening","id":1}', '*');
                 window.addEventListener('message', function(event) {
                     if (typeof event.data === 'string' && event.data.includes('{')) {
