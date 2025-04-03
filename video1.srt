@@ -4,15 +4,15 @@ These subtitles are supplied by us, they should play in sync with the video.
 
 2
 00:00:05,000 --> 00:00:10,000
-These subtitles are supplied by us, they should play in sync with the video.
+I guess they need to change, in order to show that they work.
 
 3
 00:00:10,000 --> 00:00:15,000
-These subtitles are supplied by us, they should play in sync with the video.
+This is the third srt chunk. It's funny, I guess this means we can add words
 
 4
 00:00:15,000 --> 00:00:20,000
-These subtitles are supplied by us, they should play in sync with the video.
+of caution or correction to what's actually being said.
 
 5
 00:00:20,000 --> 00:00:25,000
