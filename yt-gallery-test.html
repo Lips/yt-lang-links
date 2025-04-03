@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YouTube Subtitle Gallery</title>
+    <script src="https://www.youtube.com/iframe_api"></script>
     <script>
         let subtitles = {};
+        let players = [];
         let videoData = [
             { id: "UkZxPIZ1ngY", srt: "video1.srt" },
             { id: "dQw4w9WgXcQ", srt: "video2.srt" },
@@ -15,20 +17,35 @@
             { id: "L_jWHffIx5E", srt: "video6.srt" }
         ];
 
-        function loadGallery() {
-            const gallery = document.getElementById("gallery");
-            gallery.innerHTML = "";
+        // This function is called by the YouTube API once the player is ready
+        function onPlayerReady(event) {
+            event.target.playVideo();
+        }
 
+        // This function is called by the YouTube API once the player is created
+        function onYouTubePlayerAPIReady() {
             videoData.forEach((video, index) => {
                 const container = document.createElement("div");
                 container.innerHTML = `
                     <div>
-                        <iframe id="ytPlayer${index}" width="560" height="315" src="https://www.youtube.com/embed/${video.id}?enablejsapi=1" frameborder="0" allowfullscreen></iframe>
-                        <p id="subtitles${index}" style="font-size: 18px; font-weight: bold; margin-top: 10px;"></p>
+                        <div id="player-${index}"></div>
+                        <p id="subtitles-${index}" style="font-size: 18px; font-weight: bold; margin-top: 10px;"></p>
                     </div>
                 `;
-                gallery.appendChild(container);
+                document.getElementById("gallery").appendChild(container);
 
+                // Create the YouTube player
+                players[index] = new YT.Player(`player-${index}`, {
+                    height: '315',
+                    width: '560',
+                    videoId: video.id,
+                    events: {
+                        'onReady': onPlayerReady,
+                        'onStateChange': onPlayerStateChange
+                    }
+                });
+
+                // Fetch and parse SRT
                 fetchSRT(video.srt, index);
             });
         }
@@ -65,31 +82,32 @@
             );
         }
 
-        function syncSubtitles() {
-            videoData.forEach((_, index) => {
-                const player = document.getElementById(`ytPlayer${index}`);
-                if (!player || !subtitles[index] || !player.contentWindow) return;
-
-                player.contentWindow.postMessage('{"event":"listening","id":1}', '*');
-                window.addEventListener('message', function(event) {
-                    if (typeof event.data === 'string' && event.data.includes('{')) {
-                        try {
-                            const data = JSON.parse(event.data);
-                            if (data.info && data.info.currentTime) {
-                                const currentTime = data.info.currentTime;
-                                const subtitle = subtitles[index].find(s => currentTime >= s.start && currentTime <= s.end);
-                                document.getElementById(`subtitles${index}`).innerText = subtitle ? subtitle.text : "";
-                            }
-                        } catch (e) {}
-                    }
-                });
-            });
+        function onPlayerStateChange(event) {
+            if (event.data === YT.PlayerState.PLAYING) {
+                syncSubtitles(event.target);
+            }
         }
 
-        setInterval(syncSubtitles, 500);
+        function syncSubtitles(player) {
+            const index = players.indexOf(player);
+            if (index === -1) return;
+
+            const currentTime = player.getCurrentTime();
+            const subtitle = subtitles[index].find(s => currentTime >= s.start && currentTime <= s.end);
+            document.getElementById(`subtitles-${index}`).innerText = subtitle ? subtitle.text : "";
+        }
+
+        // Set an interval to keep syncing subtitles
+        setInterval(() => {
+            players.forEach(player => {
+                if (player && player.getPlayerState() === YT.PlayerState.PLAYING) {
+                    syncSubtitles(player);
+                }
+            });
+        }, 500);
     </script>
 </head>
-<body onload="loadGallery()">
+<body onload="onYouTubePlayerAPIReady()">
     <h2>YouTube Subtitle Gallery</h2>
     <div id="gallery"></div>
 </body>
